@@ -1,20 +1,69 @@
-'use client'
-import useStore from '../../store/store'
-import { books } from '../../lib/mock'
-import BookCard from '../../components/BookCard'
+"use client";
+import useStore from "../../store/store";
+import { books } from "../../lib/mock";
+import BookCard from "../../components/BookCard";
+import { motion } from "framer-motion";
 
-export default function Wishlist(){
-  const wishlist = useStore(s => s.wishlist)
-  const items = books.filter(b => wishlist.includes(b.id))
+const container = {
+   hidden: { opacity: 0, y: 15 },
+   visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+         duration: 0.4,
+         staggerChildren: 0.08,
+      },
+   },
+};
 
-  return (
-    <section>
-      <h1 className="text-2xl font-bold mb-4">Wishlist</h1>
-      {items.length===0 ? <div className="card p-4">Wishlist kosong.</div> : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {items.map(b => <BookCard key={b.id} book={b} />)}
-        </div>
-      )}
-    </section>
-  )
+const item = {
+   hidden: { opacity: 0, y: 12 },
+   visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.35 },
+   },
+};
+
+export default function Wishlist() {
+   const wishlist = useStore((s) => s.wishlist);
+   const items = books.filter((b) => wishlist.includes(b.id));
+
+   return (
+      <section>
+         <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-2xl font-bold mb-4"
+         >
+            Wishlist
+         </motion.h1>
+
+         {items.length === 0 ? (
+            <motion.div
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.4 }}
+               className="card p-4 text-white"
+            >
+               Wishlist kosong.
+            </motion.div>
+         ) : (
+            <motion.div
+               key={items.length}
+               initial="hidden"
+               animate="visible"
+               variants={container}
+               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
+            >
+               {items.map((b) => (
+                  <motion.div key={b.id} variants={item}>
+                     <BookCard book={b} />
+                  </motion.div>
+               ))}
+            </motion.div>
+         )}
+      </section>
+   );
 }
