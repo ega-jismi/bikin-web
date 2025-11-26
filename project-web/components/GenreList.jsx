@@ -2,10 +2,10 @@ import React from 'react';
 
 // Data 5 Genre
 const genres = [
-    { id: 1, name: "Fiksi Ilmiah" },
-    { id: 2, name: "Pengembangan Diri" },
-    { id: 3, name: "Komedi & Humor" },
-    { id: 4, name: "Misteri & Thriller" },
+    { id: 1, name: "Programming" },
+    { id: 2, name: "Design" },
+    { id: 3, name: "Database" },
+    { id: 4, name: "Alghorithms" },
     { id: 5, name: "Seni & Desain" },
 ];
 
