@@ -1,222 +1,240 @@
 "use client";
 
 import { useState } from "react";
-import { books, reviews } from "../../../lib/mock";
-import BookCard from "../../../components/BookCard";
+import Link from "next/link";
+import { books, reviews } from "../../../lib/mock"; // Path mundur 3x
+import BookCard from "../../../components/BookCard"; // Path mundur 3x
 import { motion } from "framer-motion";
+import { FiShoppingCart, FiHeart, FiCheckCircle, FiTruck, FiShield, FiMinus, FiPlus, FiStar } from "react-icons/fi";
+import useStore from "../../../store/store"; // Path mundur 3x
 
 export default function Detail({ params }) {
-   // Cari buku berdasarkan ID dari URL
    const book = books.find((b) => b.id === params.id);
-
-   // Siapkan data awal dengan aman
+   const addToCart = useStore((s) => s.addToCart);
+   
+   // State untuk Ulasan
    const initialReviews = (book && reviews && reviews[book.id]) ? reviews[book.id] : [];
-
-   // Masukkan data yang sudah aman ke useState
    const [reviewList, setReviewList] = useState(initialReviews);
    
-   // State untuk Form Input
+   // State Form & Quantity
    const [name, setName] = useState("");
    const [comment, setComment] = useState("");
    const [rating, setRating] = useState(5);
+   const [qty, setQty] = useState(1); 
 
-   // Jika buku tidak ditemukan, tampilkan pesan error
-   if (!book) return <div className="p-10 text-center">Buku tidak ditemukan</div>;
+   if (!book) return <div className="p-10 text-center text-gray-500">Buku tidak ditemukan</div>;
 
-   const related = books.filter((b) => b.id !== book.id).slice(0, 3);
+   const related = books.filter((b) => b.id !== book.id).slice(0, 4); 
 
-   // --- FUNGSI SUBMIT ULASAN ---
+   // Logika Harga
+   const originalPrice = Number(book.price) || 0;
+   const discount = book.discount || 0;
+   const hasDiscount = discount > 0;
+   const finalPrice = hasDiscount ? originalPrice - (originalPrice * discount / 100) : originalPrice;
+
    const handleSubmit = (e) => {
       e.preventDefault();
       if (!name || !comment) return;
-
-      const newReview = {
-         id: Date.now(),
-         user: name,
-         rating: Number(rating),
-         text: comment,
-      };
-
+      const newReview = { id: Date.now(), user: name, rating: Number(rating), text: comment };
       setReviewList([newReview, ...reviewList]);
-      setName("");
-      setComment("");
-      setRating(5);
+      setName(""); setComment(""); setRating(5);
+   };
+
+   const handleAdd = () => {
+      for(let i=0; i<qty; i++) {
+         addToCart({...book, price: finalPrice});
+      }
    };
 
    return (
-      <section className="max-w-4xl mx-auto pb-10">
-         <div className="grid md:grid-cols-3 gap-8">
-            {/* Bagian Kiri: Cover */}
+      <section className="max-w-6xl mx-auto pb-10 px-4">
+         
+         {/* BREADCRUMBS */}
+         <div className="text-sm text-slate-500 dark:text-slate-400 mb-6 flex items-center gap-2">
+            <Link href="/" className="hover:text-bookBlue transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/katalog" className="hover:text-bookBlue transition-colors">Katalog</Link>
+            <span>/</span>
+            <span className="text-slate-900 dark:text-white font-medium truncate">{book.title}</span>
+         </div>
+
+         <div className="grid md:grid-cols-12 gap-8 lg:gap-12">
+            
+            {/* KOLOM KIRI: GAMBAR */}
             <motion.div 
-               initial={{ opacity: 0, x: -20 }}
-               animate={{ opacity: 1, x: 0 }}
-               className="md:col-span-1"
+               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} 
+               className="md:col-span-4 lg:col-span-4"
             >
-               <div className="card p-4 border bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-                  <img
-                     src={book.cover}
-                     alt={book.title}
-                     className="w-full h-auto rounded shadow-sm"
-                  />
+               <div className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg sticky top-24">
+                  <img src={book.cover} alt={book.title} className="w-full h-auto rounded-lg" />
                </div>
             </motion.div>
 
-            {/* Bagian Kanan: Info Buku */}
+            {/* KOLOM KANAN: DETAIL INFO */}
             <motion.div 
-               initial={{ opacity: 0, x: 20 }}
-               animate={{ opacity: 1, x: 0 }}
-               className="md:col-span-2"
+               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} 
+               className="md:col-span-8 lg:col-span-8"
             >
-               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{book.title}</h1>
-               <p className="text-lg text-purple-600 dark:text-purple-400 font-medium mb-4">
-                  {book.author}
-               </p>
-               <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg mb-6">
-                  {book.description}
-               </p>
-               
-               {/* Harga & Tombol */}
-               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800">
-                  <div>
-                     <span className="text-sm text-gray-500 dark:text-gray-400 block">Harga Terbaik</span>
-                     <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
-                        Rp {Number(book.price).toLocaleString("id-ID")}
+               {/* Judul & Penulis */}
+               <div className="mb-1">
+                  <span className="bg-blue-100 dark:bg-blue-900/30 text-bookBlue dark:text-blue-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                     {book.tags?.[0] || "Buku"}
+                  </span>
+               </div>
+               <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+                  {book.title}
+               </h1>
+               <div className="flex items-center gap-4 text-sm mb-6">
+                  <span className="text-slate-600 dark:text-slate-400">Oleh: <span className="text-bookBlue font-semibold">{book.author}</span></span>
+                  <div className="flex items-center text-yellow-400">
+                     <FiStar className="fill-current" /> 4.8 <span className="text-slate-400 ml-1">(20 Ulasan)</span>
+                  </div>
+               </div>
+
+               {/* Harga */}
+               <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 mb-8">
+                  <div className="flex items-end gap-3 mb-4">
+                     <div className="text-4xl font-bold text-bookOrange">
+                        Rp {finalPrice.toLocaleString("id-ID")}
+                     </div>
+                     {hasDiscount && (
+                        <div className="mb-1">
+                           <span className="text-sm text-slate-400 line-through mr-2">Rp {originalPrice.toLocaleString("id-ID")}</span>
+                           <span className="text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">Hemat {discount}%</span>
+                        </div>
+                     )}
+                  </div>
+
+                  {/* Tombol Aksi */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                     {/* Quantity Selector */}
+                     <div className="flex items-center border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 h-12 w-fit">
+                        <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-4 text-slate-500 hover:text-bookBlue"><FiMinus/></button>
+                        <span className="w-8 text-center font-bold text-slate-900 dark:text-white">{qty}</span>
+                        <button onClick={() => setQty(qty + 1)} className="px-4 text-slate-500 hover:text-bookBlue"><FiPlus/></button>
+                     </div>
+
+                     {/* Add to Cart */}
+                     <button 
+                        onClick={handleAdd}
+                        className="flex-1 h-12 bg-bookBlue hover:bg-blue-900 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
+                     >
+                        <FiShoppingCart className="w-5 h-5" /> Tambah Keranjang
+                     </button>
+
+                     {/* Wishlist */}
+                     <button className="h-12 w-12 border border-slate-300 dark:border-slate-600 rounded-xl flex items-center justify-center text-slate-500 hover:text-red-500 hover:border-red-500 transition-colors">
+                        <FiHeart className="w-5 h-5" />
+                     </button>
+                  </div>
+
+                  {/* Jaminan Layanan */}
+                  <div className="grid grid-cols-3 gap-2 mt-6 pt-6 border-t border-slate-200 dark:border-slate-700 text-xs md:text-sm text-slate-600 dark:text-slate-400">
+                     <div className="flex flex-col items-center gap-1 text-center">
+                        <FiCheckCircle className="text-green-500 w-5 h-5" /> <span>100% Original</span>
+                     </div>
+                     <div className="flex flex-col items-center gap-1 text-center">
+                        <FiTruck className="text-bookBlue w-5 h-5" /> <span>Kirim Cepat</span>
+                     </div>
+                     <div className="flex flex-col items-center gap-1 text-center">
+                        <FiShield className="text-purple-500 w-5 h-5" /> <span>Transaksi Aman</span>
                      </div>
                   </div>
-                  <button className="flex-1 w-full sm:w-auto px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-purple-500/30 transform hover:-translate-y-1">
-                     + Tambah ke Keranjang
-                  </button>
                </div>
+
+               {/* DETAIL SPESIFIKASI (DINAMIS) */}
+               <div className="mb-8">
+                  <h3 className="text-lg font-serif font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+                     Deskripsi & Spesifikasi
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                     {book.description}
+                  </p>
+
+                  {/* --- BAGIAN INI YANG SUDAH DIPERBAIKI --- */}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                     <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <span className="block text-slate-400 text-xs uppercase">ISBN</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">{book.isbn || "-"}</span>
+                     </div>
+                     <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <span className="block text-slate-400 text-xs uppercase">Penerbit</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">{book.publisher || "-"}</span>
+                     </div>
+                     <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <span className="block text-slate-400 text-xs uppercase">Halaman</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">{book.pages || "-"} Halaman</span>
+                     </div>
+                     <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <span className="block text-slate-400 text-xs uppercase">Berat</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">{book.weight || "-"} kg</span>
+                     </div>
+                  </div>
+                  {/* ---------------------------------------- */}
+               </div>
+
             </motion.div>
          </div>
 
-         <div className="border-t border-gray-200 dark:border-gray-700 my-12" />
+         <div className="border-t border-slate-200 dark:border-slate-800 my-12" />
 
-         {/* --- AREA ULASAN & FORM --- */}
-         <div className="grid md:grid-cols-2 gap-10">
-            
-            {/* 1. DAFTAR ULASAN */}
+         {/* AREA ULASAN */}
+         <div className="grid md:grid-cols-2 gap-10 mb-16">
             <div>
-               <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
-                  <span>💬</span> Ulasan Pembaca <span className="text-sm font-normal text-gray-500">({reviewList.length})</span>
-               </h3>
-               
-               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+               <h3 className="text-2xl font-serif font-bold mb-6 text-slate-900 dark:text-white">Ulasan Pembaca</h3>
+               <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {reviewList.length > 0 ? (
                      reviewList.map((r) => (
-                        <motion.div
-                           initial={{ opacity: 0, y: 10 }}
-                           animate={{ opacity: 1, y: 0 }}
-                           key={r.id}
-                           className="p-5 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 shadow-sm"
-                        >
-                           <div className="flex justify-between items-start mb-2">
-                              <div>
-                                 <div className="font-bold text-gray-900 dark:text-white">{r.user}</div>
-                                 <div className="text-xs text-gray-500">Pembaca Terverifikasi</div>
-                              </div>
-                              <div className="flex text-yellow-400 text-sm">
-                                 {"★".repeat(r.rating)}
-                                 <span className="text-gray-300">{"★".repeat(5 - r.rating)}</span>
-                              </div>
+                        <div key={r.id} className="p-5 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                           <div className="flex justify-between mb-2">
+                              <div className="font-bold text-slate-900 dark:text-white">{r.user}</div>
+                              <div className="flex text-yellow-400 text-xs">{"★".repeat(r.rating)}</div>
                            </div>
-                           <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
-                              "{r.text}"
-                           </p>
-                        </motion.div>
+                           <p className="text-slate-600 dark:text-slate-300 text-sm">"{r.text}"</p>
+                        </div>
                      ))
                   ) : (
-                     <div className="text-center py-10 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300">
-                        <p className="text-gray-500">Belum ada ulasan. Jadilah yang pertama!</p>
-                     </div>
+                     <p className="text-slate-500 italic">Belum ada ulasan.</p>
                   )}
                </div>
             </div>
 
-            {/* 2. FORM TAMBAH ULASAN */}
-            <div className="bg-gray-50 dark:bg-gray-800/40 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 h-fit sticky top-4">
-               <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Tulis Ulasan Anda</h3>
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 h-fit">
+               <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Tulis Ulasan</h3>
                <form onSubmit={handleSubmit} className="space-y-4">
-                  
-                  {/* Input Nama */}
-                  <div>
-                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Nama</label>
-                     <input 
-                        type="text" 
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Nama Anda"
-                        className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-500 outline-none transition-all"
-                     />
+                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama Anda"
+                     className="w-full px-4 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 outline-none focus:border-bookBlue transition-all"
+                  />
+                  <div className="flex gap-2">
+                     {[1,2,3,4,5].map(num => (
+                        <button key={num} type="button" onClick={() => setRating(num)} 
+                           className={`w-8 h-8 rounded-lg font-bold border ${rating === num ? 'bg-yellow-400 border-yellow-400 text-white' : 'border-slate-300 text-slate-400'}`}>
+                           {num}
+                        </button>
+                     ))}
                   </div>
-
-                  {/* Input Rating (DENGAN IKON BINTANG) */}
-                  <div>
-                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Rating</label>
-                     <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((num) => (
-                           <button
-                              key={num}
-                              type="button"
-                              onClick={() => setRating(num)}
-                              className="focus:outline-none transition-transform active:scale-95 hover:scale-110"
-                           >
-                              {/* SVG Bintang */}
-                              <svg 
-                                 className={`w-8 h-8 transition-colors duration-200 ${
-                                    num <= rating 
-                                       ? "text-yellow-400 fill-yellow-400 drop-shadow-sm" // Warna Kuning jika terpilih
-                                       : "text-gray-300 fill-gray-200 dark:text-gray-600 dark:fill-gray-700" // Warna Abu jika tidak
-                                 }`}
-                                 viewBox="0 0 24 24" 
-                                 stroke="currentColor" 
-                                 strokeWidth="1"
-                              >
-                                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                              </svg>
-                           </button>
-                        ))}
-                     </div>
-                     <div className="text-xs text-gray-400 mt-1 ml-1">
-                        {rating === 5 ? "Sempurna!" : rating >= 4 ? "Sangat Bagus" : rating >= 3 ? "Cukup Bagus" : "Kurang"}
-                     </div>
-                  </div>
-
-                  {/* Input Komentar */}
-                  <div>
-                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Ulasan</label>
-                     <textarea 
-                        required
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        rows="3"
-                        placeholder="Apa pendapat Anda tentang buku ini?"
-                        className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-500 outline-none transition-all resize-none"
-                     ></textarea>
-                  </div>
-
-                  <button 
-                     type="submit"
-                     className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-black font-bold rounded-xl hover:opacity-90 transition-opacity shadow-lg"
-                  >
+                  <textarea required value={comment} onChange={(e) => setComment(e.target.value)} rows="3" placeholder="Pendapat Anda..."
+                     className="w-full px-4 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 outline-none focus:border-bookBlue transition-all"
+                  ></textarea>
+                  <button type="submit" className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl hover:opacity-90 transition-all">
                      Kirim Ulasan
                   </button>
                </form>
             </div>
          </div>
 
-         {/* --- REKOMENDASI --- */}
-         <div className="mt-16">
-            <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white border-l-4 border-purple-500 pl-4">
+         {/* REKOMENDASI LAIN */}
+         <div>
+            <h3 className="text-2xl font-serif font-bold mb-6 text-slate-900 dark:text-white border-l-4 border-bookBlue pl-4">
                Mungkin Anda Suka
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                {related.map((b) => (
                   <BookCard key={b.id} book={b} />
                ))}
             </div>
          </div>
+
       </section>
    );
 }
