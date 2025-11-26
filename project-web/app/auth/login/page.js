@@ -2,220 +2,208 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FiMail, FiLock, FiArrowRight, FiChrome, FiGithub, FiUser, FiCheckCircle } from 'react-icons/fi';
+import useStore from '../../../store/store'; 
 
-export default function LoginPage() {
+export default function AuthPage() {
   const router = useRouter();
+  const setLoggedIn = useStore((s) => s.setLoggedIn);
 
-  // State untuk Login
+  // --- STATE MODE (LOGIN / REGISTER) ---
+  const [isLoginMode, setIsLoginMode] = useState(true); // Default: Mode Login
+  const [isLoading, setIsLoading] = useState(false);
+
+  // State Form
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [focusedInput, setFocusedInput] = useState(null);
+  const [confirmPass, setConfirmPass] = useState('');
 
-  // State untuk Modal Register & Success
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-
-  // --- LOGIKA LOGIN ---
-  const handleLogin = async (e) => {
+  // --- LOGIKA SUBMIT (Satu fungsi untuk keduanya) ---
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validasi Khusus Register
+    if (!isLoginMode) {
+        if (password !== confirmPass) {
+            alert("Password konfirmasi tidak cocok!");
+            return;
+        }
+        if (!name) {
+            alert("Nama harus diisi!");
+            return;
+        }
+    }
+
     setIsLoading(true);
+    
+    // Simulasi Proses Server
     setTimeout(() => {
+      // 1. Simpan Token
       document.cookie = "token=token-palsu-bebas; path=/; max-age=86400"; 
-      router.push('/');
+      
+      // 2. Update Global Store (Agar Navbar berubah)
+      setLoggedIn(true); 
+      window.dispatchEvent(new Event("auth-change"));
+
+      // 3. Pindah ke Home
+      router.push('/'); 
       setIsLoading(false);
     }, 1500);
   };
 
-  // --- LOGIKA REGISTER ---
-  const handleRegister = (e) => {
-    e.preventDefault();
-    setIsRegistering(true);
-    
-    setTimeout(() => {
-      setIsRegistering(false);
-      setShowRegisterModal(false); // Tutup Form Daftar
-      setShowSuccessModal(true);   // Munculkan Popup Sukses
-    }, 2000);
+  // Fungsi Ganti Mode
+  const toggleMode = () => {
+      setIsLoginMode(!isLoginMode);
+      // Reset form saat ganti mode agar bersih
+      setName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPass('');
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-900 text-white">
+    <div className="min-h-screen flex bg-white dark:bg-slate-900">
       
-      {/* --- BACKGROUND DECORATION --- */}
-      <div className="absolute -top-[20%] -left-[10%] h-[500px] w-[500px] rounded-full bg-purple-600/30 blur-[120px] animate-pulse" />
-      <div className="absolute top-[40%] -right-[10%] h-[400px] w-[400px] rounded-full bg-blue-600/20 blur-[100px] animate-pulse delay-1000" />
-      <div className="absolute -bottom-[10%] left-[20%] h-[300px] w-[300px] rounded-full bg-pink-600/20 blur-[100px] animate-pulse delay-700" />
-
-      {/* ======================= CARD LOGIN UTAMA ======================= */}
-      <motion.div 
-        initial={{ opacity: 0, y: 30, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        className="relative z-10 w-full max-w-md p-8"
-      >
-        <div className="absolute inset-0 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl" />
-        
-        <div className="relative z-20">
-          <div className="text-center mb-8">
-            <motion.div 
-              initial={{ scale: 0 }} animate={{ scale: 1 }} 
-              className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-500 to-purple-600 shadow-lg shadow-purple-500/30 mb-4"
-            >
-              <span className="text-3xl">G</span>
-            </motion.div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-              Selamat Datang
-            </h1>
-            <p className="text-gray-400 text-sm mt-2">Masuk untuk melanjutkan belanja</p>
-          </div>
-          
-          <form onSubmit={handleLogin} className="space-y-6">
-            <InputGroup 
-              id="login-email" label="Email Address" type="email" icon="email"
-              value={email} setValue={setEmail} focusedInput={focusedInput} setFocusedInput={setFocusedInput}
-            />
-            <InputGroup 
-              id="login-pass" label="Password" type="password" icon="lock"
-              value={password} setValue={setPassword} focusedInput={focusedInput} setFocusedInput={setFocusedInput}
-            />
-
-            {/* Link 'Lupa password?' sudah dihapus di sini */}
-
-            <SubmitButton isLoading={isLoading} text="Masuk Sekarang" />
-
-            <p className="text-center text-sm text-gray-400 mt-6">
-              Belum punya akun?{' '}
-              <button type="button" onClick={() => setShowRegisterModal(true)} className="font-medium text-blue-400 hover:text-blue-300 hover:underline">
-                Daftar Gratis
-              </button>
-            </p>
-          </form>
-        </div>
-      </motion.div>
-
-      {/* ======================= MODAL REGISTER POPUP ======================= */}
-      <AnimatePresence>
-        {showRegisterModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowRegisterModal(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative z-10 w-full max-w-lg p-1"
-            >
-              <div className="relative rounded-2xl bg-gray-900 border border-white/10 shadow-2xl p-8 overflow-hidden">
-                <div className="absolute top-0 right-0 p-4">
-                  <button onClick={() => setShowRegisterModal(false)} className="text-gray-400 hover:text-white">✕</button>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-6 text-center">Buat Akun Baru</h2>
-                <form onSubmit={handleRegister} className="space-y-5">
-                  <RegisterInput placeholder="Nama Lengkap" icon="👤" />
-                  <RegisterInput placeholder="Email Address" icon="✉️" type="email" />
-                  <RegisterInput placeholder="Password" icon="🔒" type="password" />
-                  <RegisterInput placeholder="Ulangi Password" icon="🛡️" type="password" />
-                  
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <input type="checkbox" required className="rounded border-gray-700 bg-gray-800" />
-                    <span>Saya setuju dengan Syarat & Ketentuan</span>
-                  </div>
-                  <button type="submit" disabled={isRegistering} className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-3 font-bold text-white shadow-lg transition-all hover:shadow-green-500/30 disabled:opacity-70">
-                    {isRegistering ? 'Mendaftarkan...' : 'Daftar Akun'}
-                  </button>
-                </form>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ======================= MODAL SUKSES ======================= */}
-      <AnimatePresence>
-        {showSuccessModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowSuccessModal(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.5, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="relative z-10 w-full max-w-sm bg-gray-900 border border-green-500/30 rounded-3xl p-8 text-center shadow-[0_0_50px_rgba(34,197,94,0.2)]"
-            >
-              <motion.div 
-                initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: "spring" }}
-                className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/50"
-              >
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                </svg>
-              </motion.div>
-
-              <h3 className="text-2xl font-bold text-white mb-2">Pendaftaran Berhasil!</h3>
-              <p className="text-gray-400 mb-6">Akun Anda telah dibuat. Silakan login untuk mulai berbelanja.</p>
-
-              <button 
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-200 transition-colors shadow-lg"
-              >
-                Login Sekarang
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-    </div>
-  );
-}
-
-// --- HELPER COMPONENTS ---
-function InputGroup({ id, label, type, icon, value, setValue, focusedInput, setFocusedInput }) {
-  return (
-    <div className="relative group">
-      <label className={`absolute left-3 transition-all duration-300 pointer-events-none ${focusedInput === id || value ? '-top-6 text-xs text-blue-400' : 'top-3 text-gray-400'}`}>
-        {label}
-      </label>
-      <div className={`flex items-center justify-between rounded-xl border bg-gray-900/50 transition-all duration-300 ${focusedInput === id ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-700 hover:border-gray-600'}`}>
-        <input
-          type={type} required value={value} onFocus={() => setFocusedInput(id)} onBlur={() => setFocusedInput(null)} onChange={(e) => setValue(e.target.value)}
-          className="w-full bg-transparent p-3 pl-4 text-white outline-none placeholder-transparent"
+      {/* BAGIAN KIRI: GAMBAR (Quote berubah sesuai mode) */}
+      <div className="hidden md:flex w-1/2 bg-slate-800 relative overflow-hidden">
+        <div 
+            className="absolute inset-0 z-0"
+            style={{
+                backgroundImage: "url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?q=80&w=2228&auto=format&fit=crop')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'brightness(0.6)'
+            }}
         />
-        <div className="pr-4 text-gray-400">
-          {icon === 'email' && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>}
-          {icon === 'lock' && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
+        <div className="relative z-10 flex flex-col justify-between h-full p-12 text-white">
+            <div className="flex items-center gap-2">
+                <img src="/logo-putih.png" alt="Logo" className="h-8 w-auto opacity-80" />
+            </div>
+            <div className="mb-10">
+                <h2 className="text-4xl font-serif font-bold mb-4 leading-tight">
+                    {isLoginMode 
+                        ? '"Buku adalah cermin jiwa.\nTemukan dirimu di setiap halamannya."' 
+                        : '"Bergabunglah dengan komunitas\npembaca terbesar di Indonesia."'
+                    }
+                </h2>
+                <p className="text-slate-300 text-lg">— Paper Bloom Community</p>
+            </div>
+        </div>
+      </div>
+
+      {/* BAGIAN KANAN: FORM DINAMIS */}
+      <div className="w-full md:w-1/2 flex items-center justify-center p-8 md:p-16 relative overflow-y-auto">
+        <Link href="/" className="absolute top-6 left-6 text-sm text-slate-500 hover:text-bookBlue flex items-center gap-2 transition-colors">
+            ← Kembali ke Beranda
+        </Link>
+
+        <div className="max-w-md w-full py-10">
+            <div className="text-center mb-8">
+                <img src="/logo-hitam.png" alt="Paper Bloom" className="h-100 mx-auto mb-20 dark:hidden" />
+                <img src="/logo-putih.png" alt="Paper Bloom" className="h-100 mx-auto mb-20 hidden dark:block" />
+                
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {isLoginMode ? 'Selamat Datang Kembali' : 'Buat Akun Baru'}
+                </h1>
+                <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
+                    {isLoginMode ? 'Masuk untuk melanjutkan belanja.' : 'Isi data diri untuk mulai berbelanja.'}
+                </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                
+                {/* Input Nama (Hanya muncul saat Register) */}
+                <AnimatePresence>
+                    {!isLoginMode && (
+                        <motion.div 
+                            initial={{ opacity: 0, height: 0 }} 
+                            animate={{ opacity: 1, height: 'auto' }} 
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-1 overflow-hidden"
+                        >
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nama Lengkap</label>
+                            <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><FiUser /></div>
+                                <input type="text" required={!isLoginMode} value={name} onChange={(e) => setName(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-bookBlue outline-none transition-all" placeholder="Jhon Doe"/>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Input Email */}
+                <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
+                    <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><FiMail /></div>
+                        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-bookBlue outline-none transition-all" placeholder="nama@email.com"/>
+                    </div>
+                </div>
+
+                {/* Input Password */}
+                <div className="space-y-1">
+                    <div className="flex justify-between">
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+                        {isLoginMode && <a href="#" className="text-xs text-bookBlue hover:underline">Lupa Password?</a>}
+                    </div>
+                    <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><FiLock /></div>
+                        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-bookBlue outline-none transition-all" placeholder="••••••••"/>
+                    </div>
+                </div>
+
+                {/* Input Konfirmasi Password (Hanya Register) */}
+                <AnimatePresence>
+                    {!isLoginMode && (
+                        <motion.div 
+                            initial={{ opacity: 0, height: 0 }} 
+                            animate={{ opacity: 1, height: 'auto' }} 
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-1 overflow-hidden"
+                        >
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Ulangi Password</label>
+                            <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><FiCheckCircle /></div>
+                                <input type="password" required={!isLoginMode} value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-bookBlue outline-none transition-all" placeholder="••••••••"/>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Tombol Submit */}
+                <motion.button 
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    disabled={isLoading}
+                    className="w-full py-3.5 bg-bookBlue hover:bg-blue-900 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 mt-6"
+                >
+                    {isLoading ? 'Memproses...' : (isLoginMode ? <>Masuk Sekarang <FiArrowRight/></> : <>Daftar Akun <FiArrowRight/></>)}
+                </motion.button>
+            </form>
+
+            <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-700"></div></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-slate-900 px-2 text-slate-400">Atau masuk dengan</span></div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <button className="flex items-center justify-center gap-2 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300"><FiChrome className="text-red-500" /> Google</button>
+                <button className="flex items-center justify-center gap-2 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300"><FiGithub /> GitHub</button>
+            </div>
+
+            {/* TOMBOL TOGGLE MODE (Ganti antara Login/Register) */}
+            <p className="text-center text-sm text-slate-500 mt-8">
+                {isLoginMode ? 'Belum punya akun? ' : 'Sudah punya akun? '}
+                <button 
+                    onClick={toggleMode}
+                    className="font-bold text-bookBlue hover:underline focus:outline-none"
+                >
+                    {isLoginMode ? 'Daftar Gratis' : 'Masuk Sekarang'}
+                </button>
+            </p>
         </div>
       </div>
     </div>
-  );
-}
-
-function RegisterInput({ placeholder, icon, type = "text" }) {
-  return (
-    <div className="group relative">
-      <input type={type} required placeholder={placeholder} 
-        className="w-full rounded-xl border border-gray-700 bg-gray-800/50 p-3 pl-4 text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-      />
-      <div className="absolute right-3 top-3.5 text-gray-400">{icon}</div>
-    </div>
-  );
-}
-
-function SubmitButton({ isLoading, text }) {
-  return (
-    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={isLoading} 
-      className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3.5 font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-blue-500/50 disabled:opacity-70 disabled:cursor-not-allowed"
-    >
-      {isLoading ? <div className="flex items-center justify-center gap-2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /><span>Memproses...</span></div> : text}
-    </motion.button>
   );
 }
