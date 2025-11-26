@@ -5,45 +5,47 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { books } from "../lib/mock";
 import BookCard from "../components/BookCard";
+import GenreList from "../components/GenreList";
+import useStore from "../store/store"; // <--- 1. Import Store
 import { motion } from "framer-motion";
 
 export default function Home() {
   const router = useRouter();
+  const setQuery = useStore((s) => s.setQuery); // <--- 2. Ambil fungsi setQuery
   
-  // State untuk menyimpan status: Apakah user sudah login atau belum?
+  // State Login & Loading
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Daftar Kategori Baru (Sesuai Mock Data)
+  const popularCategories = ["Business", "Finance", "Startup", "Design", "Poetry"];
+
   useEffect(() => {
-    // Cek apakah ada token di cookie
     const hasToken = document.cookie.includes("token=");
-    
-    // Simpan statusnya ke state
     setIsLoggedIn(hasToken);
-    
-    // Matikan loading (Kita TIDAK LAGI memaksa redirect ke login di sini)
     setIsLoading(false);
   }, []);
 
-  // Fungsi Logout
   const handleLogout = () => {
-    document.cookie = "token=; path=/; max-age=0"; // Hapus token
-    setIsLoggedIn(false); // Ubah status jadi belum login
-    router.refresh(); // Refresh halaman agar tampilan terupdate
+    document.cookie = "token=; path=/; max-age=0"; 
+    setIsLoggedIn(false); 
+    router.refresh(); 
   };
 
-  // Tampilkan loading sebentar agar tombol tidak berubah mendadak
-  if (isLoading) {
-    return null; // Atau return <div...Loading...</div>
-  }
+  // Fungsi saat Kategori di Sidebar diklik
+  const handleCategoryClick = (category) => {
+     setQuery(category); // Simpan kata kunci
+     router.push("/katalog"); // Pindah ke katalog
+  };
+
+  if (isLoading) return null;
 
   return (
     <section className="relative space-y-12 bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6 md:p-10 rounded-xl">
       
-      {/* --- BAGIAN TOMBOL POJOK KANAN ATAS --- */}
+      {/* --- TOMBOL LOGIN/LOGOUT --- */}
       <div className="absolute top-6 right-6 z-50">
         {isLoggedIn ? (
-          // JIKA SUDAH LOGIN: Tampilkan Tombol Logout (Merah)
           <button
             onClick={handleLogout}
             className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl shadow-lg transition-all"
@@ -51,7 +53,6 @@ export default function Home() {
             Logout
           </button>
         ) : (
-          // JIKA BELUM LOGIN: Tampilkan Tombol Login (Biru)
           <Link
             href="/auth/login"
             className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg transition-all inline-block"
@@ -68,7 +69,7 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: "easeOut" }}
       >
-        {/* Left Content */}
+        {/* KONTEN KIRI (Hero Text) */}
         <motion.div
           className="md:col-span-2 p-8 rounded-3xl shadow-lg bg-white/70 dark:bg-gray-900/70
           backdrop-blur border border-pink-100 dark:border-gray-700"
@@ -103,7 +104,7 @@ export default function Home() {
               <Link
                 href="/katalog"
                 className="px-6 py-3 bg-pink-400 text-white rounded-xl shadow
-                hover:bg-pink-500 transition-all font-medium"
+                hover:bg-pink-500 transition-all font-medium inline-block"
               >
                 Jelajahi Katalog
               </Link>
@@ -111,9 +112,9 @@ export default function Home() {
 
             <motion.div whileHover={{ scale: 1.05 }}>
               <Link
-                href="/katalog"
+                href="/promo" 
                 className="px-6 py-3 border border-purple-300 bg-white/60 dark:bg-gray-800/60
-                rounded-xl shadow hover:bg-purple-50 dark:hover:bg-gray-700 transition-all font-medium text-white"
+                rounded-xl shadow hover:bg-purple-50 dark:hover:bg-gray-700 transition-all font-medium text-black dark:text-white inline-block"
               >
                 Lihat Promo
               </Link>
@@ -121,7 +122,7 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Right Categories */}
+        {/* KONTEN KANAN (Sidebar Kategori) */}
         <motion.div
           className="p-6 rounded-3xl shadow-lg bg-white/70 dark:bg-gray-900/70 backdrop-blur
           border border-purple-100 dark:border-gray-700"
@@ -134,17 +135,18 @@ export default function Home() {
           </h3>
 
           <ul className="flex flex-col gap-3 text-sm text-gray-700 dark:text-gray-300">
-            {["Programming", "Design", "Database", "Algorithms"].map(
-              (c, i) => (
+            {popularCategories.map((cat, i) => (
                 <motion.li
                   key={i}
-                  className="hover:text-pink-500 cursor-pointer transition font-medium"
+                  onClick={() => handleCategoryClick(cat)} // <-- KLIK KATEGORI AKTIF
+                  className="hover:text-pink-500 cursor-pointer transition font-medium flex items-center justify-between group"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.15 }}
+                  transition={{ delay: i * 0.1 }}
                   whileHover={{ x: 5 }}
                 >
-                  {c}
+                  <span>{cat}</span>
+                  <span className="opacity-0 group-hover:opacity-100 text-pink-400">→</span>
                 </motion.li>
               )
             )}
@@ -152,7 +154,7 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
-      {/* Rekomendasi */}
+      {/* REKOMENDASI BUKU */}
       <div>
         <h3 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-6">
           Rekomendasi untuk Anda
@@ -185,6 +187,10 @@ export default function Home() {
           ))}
         </motion.div>
       </div>
+
+      {/* GENRE LIST (Di Bawah) */}
+      <GenreList />
+      
     </section>
   );
 }
