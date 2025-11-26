@@ -1,41 +1,27 @@
-import '../styles/globals.css'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
-// 1. IMPORT FONT DARI GOOGLE
-import { Merriweather, Roboto } from 'next/font/google'
-
-// 2. KONFIGURASI FONT SERIF (UNTUK JUDUL)
-const merriweather = Merriweather({
-  subsets: ['latin'],
-  weight: ['300', '400', '700', '900'], // Ambil variasi ketebalan
-  variable: '--font-merriweather',      // Nama variabel CSS
-  display: 'swap',
-})
-
-// 3. KONFIGURASI FONT SANS (UNTUK NAVIGASI & TEKS BIASA)
-const roboto = Roboto({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '700'],
-  variable: '--font-roboto',
-  display: 'swap',
-})
-
-export const metadata = {
-  title: 'Paper Bloom | Toko Buku Online',
-  description: 'Temukan ribuan buku terbaik untuk wawasanmu.'
-}
-
-export default function RootLayout({ children }){
-  return (
-    // 4. MASUKKAN KEDUA VARIABEL KE HTML
-    <html lang="id" className={`${merriweather.variable} ${roboto.variable}`}>
-      <body className="min-h-screen flex flex-col font-sans bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-gray-100 transition-colors duration-300">
-        <Navbar />
-        <main className="flex-1 container max-w-screen-xl mx-auto px-4 py-8">
-          {children}
-        </main>
-        <Footer />
-      </body>
-    </html>
-  )
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+ 
+    // Jika kamu punya folder 'src', tambahkan juga baris di bawah ini:
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  darkMode: 'class', // Penting agar fitur Dark Mode kamu berfungsi
+  theme: {
+    extend: {
+      colors: {
+        // Menambahkan warna custom sesuai project kamu (saya ambil dari penggunaan di komponen)
+        bookBlue: '#0ea5e9', // Sesuaikan kode hex jika perlu (ini contoh default sky-500)
+        bookOrange: '#f97316',
+        bookRed: '#ef4444',
+      },
+      fontFamily: {
+        serif: ['var(--font-merriweather)'],
+        sans: ['var(--font-roboto)'],
+      },
+    },
+  },
+  plugins: [],
 }
