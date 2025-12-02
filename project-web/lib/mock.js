@@ -252,7 +252,7 @@ export const articles = [
     excerpt: "Di tengah gempuran e-book dan audiobook, buku cetak ternyata memiliki pesona dan manfaat kognitif yang tak tergantikan.",
     category: "Industri",
     date: "25 Sep 2024",
-    image: "https://images.unsplash.com/photo-1491841573634-28140fc7ced3?w=800&auto=format&fit=crop&q=60",
+    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&auto=format&fit=crop&q=60",
     // KONTEN DENGAN HTML MANUAL
     content: `
       <p>Di era di mana segala sesuatu menjadi digital, mulai dari pembayaran hingga pertemuan kerja, banyak yang memprediksi kematian buku fisik. Namun, data menunjukkan sebaliknya. Penjualan buku cetak tetap stabil, bahkan meningkat di kalangan Gen Z.</p>
