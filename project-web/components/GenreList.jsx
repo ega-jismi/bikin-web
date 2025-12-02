@@ -4,22 +4,25 @@ import React from 'react';
 import { useRouter } from "next/navigation"; 
 import useStore from "../store/store";       
 
+// --- UPDATE: Menambahkan genre "Self-help" dan "Technology" ---
 const genres = [
     { id: 1, name: "Business", icon: "💼" },
     { id: 2, name: "Finance", icon: "💰" },
     { id: 3, name: "Design", icon: "🎨" },
     { id: 4, name: "Startup", icon: "🚀" },
     { id: 5, name: "Poetry", icon: "🌹" },
+    { id: 6, name: "Self-help", icon: "🧘" }, // Tambahan 1
+    { id: 7, name: "Technology", icon: "💻" }, // Tambahan 2
 ];
 
 const GenreList = () => {
     const router = useRouter();
     const setQuery = useStore((s) => s.setQuery);
-    const setSelectedCategory = useStore((s) => s.setSelectedCategory); // <--- AMBIL DARI STORE
+    const setSelectedCategory = useStore((s) => s.setSelectedCategory); 
 
     const handleGenreClick = (genreName) => {
-        setQuery(""); // Reset pencarian teks
-        setSelectedCategory(genreName); // Set kategori global
+        setQuery(""); 
+        setSelectedCategory(genreName); 
         router.push("/katalog");
     };
 
